@@ -6,7 +6,7 @@ This project implements a custom Triton kernel for FlashAttention-2 forward and 
 
 ### PyTorch Naive baseline
 
-A straightforward PyTorch implementation that computes attention the textbook way: build the full query–key score matrix, apply the mask, softmax, then multiply by values. Gradients come from PyTorch autograd.
+This is a straightforward PyTorch implementation that computes attention the textbook way: build the full query–key score matrix, apply the mask, softmax, then multiply by values. Gradients come from PyTorch autograd.
 
 1. **GQA:** If there are fewer key/value heads than query heads, copy K/V so every query head has a match.
 2. **Scores:** For every token pair, compute `score = Q·K / √D` → an `L×L` matrix per head.
@@ -14,17 +14,19 @@ A straightforward PyTorch implementation that computes attention the textbook wa
 4. **Output:** Softmax the scores, then multiply by V.
 5. **Backward:** Standard autograd through all of the above.
 
-**Why it's expensive:** Even with masking, PyTorch still allocates a dense `[B, Hq, L, L]` score tensor. At `L=4096`, that tensor alone is ~2 GB — most of it wasted on pairs the mask will discard.
+**Why it's expensive:** Even with masking, PyTorch still allocates a dense `[B, Hq, L, L]` score tensor. At `L=4096`, that tensor alone is ~2 GB, most of which is wasted on pairs the mask will discard.
 
 ### Triton Atomic
 
-Custom `torch.autograd.Function` with:
+Attention implemented similarly to above, now using Triton.
+
+Implements a custom replacement for `torch.autograd.Function` with:
 
 - **Forward:** Tiled kernel (sparse sink + window key blocks)
 - **Backward:** Tiled kernel with atomic accumulation for `dK` / `dV`
 - **Memory:** No dense `[L, L]` attention matrix
 
-**Why it's faster:** Never materializes the full `L×L` score matrix — only computes the window + sinks each token actually uses.
+**Why it's faster:** Never materializes the full `L×L` score matrix, and only computes the window + sinks each token actually uses.
 
 ## Results
 

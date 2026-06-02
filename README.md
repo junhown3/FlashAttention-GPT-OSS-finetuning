@@ -1,6 +1,6 @@
 # FlashAttention backward pass for GPT-OSS fine-tuning in Triton
 
-This project implements a custom Triton kernel for FlashAttention-2 forward and backward passes, incorporating modern techniques such as grouped query attention (GQA), sliding window attention (SWA), and attention sinks. My original goal was to use this for finetuning OpenAI's open-weight model GPT-OSS, which was missing FlashAttention backward pass. We benchmark the speed-up and peak memory usage (for attention only, not end-to-end finetuning) against a naive PyTorch implementation (also with GQA/SWA/attention sinks).
+This project implements a custom Triton kernel for FlashAttention-2 forward and backward passes, incorporating modern techniques such as grouped query attention (GQA), sliding window attention (SWA), and attention sinks. My original goal was to use this for finetuning OpenAI's open-weight model GPT-OSS when it was released, which was missing FlashAttention backward pass. We benchmark the speed-up and peak memory usage (for attention only, not end-to-end finetuning) against a naive PyTorch implementation (also with GQA/SWA/attention sinks).
 
 ## What the Benchmark Compares
 

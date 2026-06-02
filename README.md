@@ -57,9 +57,7 @@ Benchmark config: `B=1`, `Hq=16`, `Hkv=16`, `L=4096`, `D=16`, `W=256`, `S=4`, `d
 
 ## Benchmark Plots
 
-![Latency comparison](benchmark_results_latency.png)
-
-![Peak memory comparison](benchmark_results_memory.png)
-
-![Speedup comparison](benchmark_results_speedup.png)
+<p align="center">
+  <img src="benchmark_results_combined.png" width="700" alt="Latency, peak memory, and speedup vs PyTorch naive (Tesla T4)" />
+</p>
 

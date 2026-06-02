@@ -6,27 +6,29 @@ This project implements a custom Triton kernel for FlashAttention-2 forward and 
 
 ### PyTorch Naive baseline
 
-Explicit dense attention:
+A straightforward PyTorch implementation that computes attention the textbook way: build the full query–key score matrix, apply the mask, softmax, then multiply by values. Gradients come from PyTorch autograd.
 
-1. Repeat K/V for GQA if needed
-2. Form full score tensor `S = QK^T / sqrt(D)`
-3. Apply causal + sliding-window + sink mask
-4. Softmax → `P @ V`
-5. Backward via PyTorch autograd
+1. **GQA:** If there are fewer key/value heads than query heads, copy K/V so every query head has a match.
+2. **Scores:** For every token pair, compute `score = Q·K / √D` → an `L×L` matrix per head.
+3. **Mask:** Zero out disallowed pairs (future tokens, keys outside the sliding window, except always-allowed sink tokens).
+4. **Output:** Softmax the scores, then multiply by V.
+5. **Backward:** Standard autograd through all of the above.
 
-This materializes an `[B, Hq, L, L]` attention matrix and dominates memory.
+**Why it's expensive:** Even with masking, PyTorch still allocates a dense `[B, Hq, L, L]` score tensor. At `L=4096`, that tensor alone is ~2 GB — most of it wasted on pairs the mask will discard.
 
 ### Triton Atomic
 
 Custom `torch.autograd.Function` with:
 
-- Tiled forward kernel (sparse sink + window key blocks)
-- Tiled backward kernel with atomic accumulation for `dK` / `dV`
-- No dense `[L, L]` attention matrix
+- **Forward:** Tiled kernel (sparse sink + window key blocks)
+- **Backward:** Tiled kernel with atomic accumulation for `dK` / `dV`
+- **Memory:** No dense `[L, L]` attention matrix
+
+**Why it's faster:** Never materializes the full `L×L` score matrix — only computes the window + sinks each token actually uses.
 
 ## Results
 
-Benchmark config: `B=1`, `Hq=16`, `Hkv=16`, `L=4096`, `D=16`, `W=256`, `S=4`, `dtype=torch.float16`
+**Benchmark config:** `B=1`, `Hq=16`, `Hkv=16`, `L=4096`, `D=16`, `W=256`, `S=4`, `dtype=torch.float16`
 
 ### forward_only
 

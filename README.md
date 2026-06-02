@@ -32,7 +32,7 @@ Implements a custom replacement for `torch.autograd.Function` with:
 
 **Benchmark config:** `B=1`, `Hq=16`, `Hkv=16`, `L=4096`, `D=16`, `W=256`, `S=4`, `dtype=torch.float16`
 
-### forward_only
+### Forward only
 
 | Implementation | Avg ms | Peak GB |
 |---|---:|---:|
@@ -41,7 +41,7 @@ Implements a custom replacement for `torch.autograd.Function` with:
 
 **Speedup:** 28.47x · **Memory saving:** 85.15x
 
-### forward_backward
+### Forward + backward
 
 | Implementation | Avg ms | Peak GB |
 |---|---:|---:|
@@ -50,7 +50,7 @@ Implements a custom replacement for `torch.autograd.Function` with:
 
 **Speedup:** 23.11x · **Memory saving:** 81.53x
 
-### backward_only
+### Backward only
 
 | Implementation | Avg ms | Peak GB |
 |---|---:|---:|
